@@ -12,9 +12,39 @@ android {
         versionCode 1
         versionName "1.0"
     }
-    buildTypes {
+
+    signingConfigs {
+        debug {
+            // No debug config
+        }
+
         release {
+//            storeFile file("/home/zml/Desktop/keys/Buyer.jks")
+            storeFile file("C:\\Users\\Administrator\\Desktop\\Buyer.jks")
+            storePassword "123@eascs.com"
+            keyAlias "Buyer"
+            keyPassword "123@eascs.com"
+        }
+    }
+
+    buildTypes {
+        debug {
+            // 显示Log
+            buildConfigField "boolean", "LOG_DEBUG", "true"
+            versionNameSuffix "-debug"
             minifyEnabled false
+            zipAlignEnabled false
+            shrinkResources false
+        }
+        release {
+            // 不显示Log
+            buildConfigField "boolean", "LOG_DEBUG", "false"
+            //混淆
+            minifyEnabled false
+            zipAlignEnabled true
+            // 移除无用的resource文件
+            shrinkResources true
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

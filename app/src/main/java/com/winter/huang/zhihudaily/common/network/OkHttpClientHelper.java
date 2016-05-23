@@ -2,9 +2,11 @@ package com.winter.huang.zhihudaily.common.network;
 
 import android.support.annotation.Nullable;
 
-
+import com.winter.huang.zhihudaily.BuildConfig;
 import com.winter.huang.zhihudaily.common.Constants;
 import com.winter.huang.zhihudaily.common.ZhiHuApplication;
+import com.winter.huang.zhihudaily.common.network.interceptor.DynamicBaseUrlInterceptor;
+import com.winter.huang.zhihudaily.common.network.interceptor.HeadInterceptor;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,54 +21,33 @@ import javax.net.ssl.SSLSocketFactory;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
- * Created by Winter on 2016/5/20.
+ * Created by Winter on 2016/5/18.
  * Description
  * email:huang.wqing@qq.com
  */
-public class BaseNetworkHook {
-    private static final int MODE = ZhiHuApplication.ENV;
+public class OkHttpClientHelper {
 
-    @Nullable
-    public static OkHttpClient getOkHttpClient() {
-
-        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        // 开发模式记录整个body
-        switch (MODE) {
-            case Constants.Http.Environment.Command.DEV_HOST:
-                loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-                break;
-            case Constants.Http.Environment.Command.TEST_ENV:
-                loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
-                break;
-            case Constants.Http.Environment.Command.NORMAL_ENV:
-                loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.NONE);
-                break;
-        }
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                // HeadInterceptor实现了Interceptor，Request Header添加一些业务相关数据，如APP版本，token信息
+    public static OkHttpClient getClient(HostType type, boolean retryOnFailure) {
+        OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(new HeadInterceptor())
-                //日志Interceptor，输出日志
-                .addInterceptor(loggingInterceptor)
-                // 连接超时时间设置
+                .addInterceptor(OkHttpClientHelper.getLoggingInterceptor())
+                .addInterceptor(getDynamicBaseUrlInterceptor(type))
+                .retryOnConnectionFailure(retryOnFailure)
                 .connectTimeout(10, TimeUnit.SECONDS)
-                // 读取超时时间设置
                 .readTimeout(10, TimeUnit.SECONDS)
-                // 失败重试
-                .retryOnConnectionFailure(true)
-                // 支持Https
                 .sslSocketFactory(getSslSocketFactory())
-                // 信任的主机名，返回true表示信任，可以根据主机名和SSLSession判断主机是否信任
                 .hostnameVerifier(new HostnameVerifier() {
                     @Override
                     public boolean verify(String hostname, SSLSession session) {
+                        //return true, client will not verify hostname
                         return true;
                     }
                 })
-                // 使用host name作为cookie保存的key
                 .cookieJar(new CookieJar() {
                     private final HashMap<HttpUrl, List<Cookie>> cookieStore = new HashMap<>();
 
@@ -81,23 +62,47 @@ public class BaseNetworkHook {
                         return cookies != null ? cookies : new ArrayList<Cookie>();
                     }
                 })
-                .build();
 
-        return okHttpClient;
+                .build();
+        return client;
     }
 
+    private static Interceptor getDynamicBaseUrlInterceptor(HostType type) {
+        DynamicBaseUrlInterceptor interceptor = new DynamicBaseUrlInterceptor();
+        switch (type) {
+            case HTTP:
+                //do nothing, use default baseUrl
+                break;
+            case HTTPS:
+                interceptor.setHost(Constants.BASE_HTTPS_URL);
+                break;
+        }
+        return interceptor;
+    }
+
+    public static HttpLoggingInterceptor getLoggingInterceptor() {
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        // In debug mode print the whole body of response
+        if (BuildConfig.LOG_DEBUG) {
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        } else {
+            logging.setLevel(HttpLoggingInterceptor.Level.NONE);
+        }
+        return logging;
+    }
+
+    @Nullable
     private static SSLSocketFactory getSslSocketFactory() {
         SSLSocketFactory sslSocketFactory = null;
         try {
             sslSocketFactory = SSLSocketFactoryHook.getSslSocketFactory(
                     null,
                     ZhiHuApplication.getApplication().getAssets().open("starline2.bks"),
-                    "123@eascs.com"
+                    ""
             );
         } catch (IOException e) {
             e.printStackTrace();
         }
         return sslSocketFactory;
     }
-
 }

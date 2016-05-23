@@ -8,6 +8,7 @@ package com.winter.huang.zhihudaily.common;
 public class Constants {
 
     public static final String BASE_HTTP_URL = "http://news-at.zhihu.com/api/4/news/";
+    public static final String BASE_HTTPS_URL = "https://news-at.zhihu.com/api/4/news/";
 
     public class Http {
         public class Environment {

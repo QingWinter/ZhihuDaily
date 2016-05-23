@@ -1,12 +1,7 @@
-package com.winter.huang.zhihudaily.network.interceptor;
-
-import com.squareup.picasso.Picasso;
+package com.winter.huang.zhihudaily.common.network.interceptor;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-import okhttp3.Headers;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -17,27 +12,21 @@ import okio.GzipSink;
 import okio.Okio;
 
 /**
- * Created by Winter on 2016/5/18.
- * Description
+ * Created by Winter on 2016/5/22.
+ * Description use this if you need to Gzip.
  * email:huang.wqing@qq.com
  */
-public class HeadInterceptor implements Interceptor {
-
+public class GzipInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
-        Map<String, String> header = new HashMap<>();
-        header.put("app_name", "ZhiHuDaily");
-        Headers headers = Headers.of(header);
         Request originalRequest = chain.request();
         Request compressedRequest = originalRequest.newBuilder()
-                .headers(headers)
-//                            .method(originalRequest.method(), gzip(originalRequest.body()))
+                .method(originalRequest.method(), gzip(originalRequest.body()))
                 .build();
         return chain.proceed(compressedRequest);
     }
 
     /**
-     * Use this if we need to gzip the RequestBody .
      * @param body
      * @return
      */

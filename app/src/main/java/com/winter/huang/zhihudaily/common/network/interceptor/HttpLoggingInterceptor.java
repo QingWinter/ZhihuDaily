@@ -1,4 +1,4 @@
-package com.winter.huang.zhihudaily.network.interceptor;
+package com.winter.huang.zhihudaily.common.network.interceptor;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

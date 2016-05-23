@@ -1,6 +1,5 @@
 package com.winter.huang.zhihudaily.common.network;
 
-import com.hele.buyer.common.log.Logger;
 
 /**
  * Created by Winter on 2016/5/19.
@@ -8,8 +7,18 @@ import com.hele.buyer.common.log.Logger;
  * email:huang.wqing@qq.com
  */
 public class ApiException extends RuntimeException {
-
+    private int state;
+    private String msg;
     public ApiException(int state, String msg) {
-        Logger.e("LoginActivity", msg);
+        this.state = state;
+        this.msg = msg;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public String getMsg() {
+        return msg;
     }
 }
